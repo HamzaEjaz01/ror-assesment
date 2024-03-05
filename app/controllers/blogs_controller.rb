@@ -1,4 +1,5 @@
 require 'csv'
+
 class BlogsController < ApplicationController
   before_action :authenticate_user!
   before_action :set_blog, only: %i[ show edit update destroy ]
@@ -7,7 +8,6 @@ class BlogsController < ApplicationController
   def index
     # @blogs = current_user.blogs
     @pagy, @blogs = pagy(current_user.blogs)
-
   end
 
   # GET /blogs/1 or /blogs/1.json
@@ -61,27 +61,41 @@ class BlogsController < ApplicationController
     end
   end
 
+  # BTW most efficient and best way to import in batches in background jobs
   def import
     file = params[:attachment]
-    data = CSV.parse(file.to_io, headers: true, encoding: 'utf8')
-    # Start code to handle CSV data
-    ActiveRecord::Base.transaction do
-      data.each do |row|
-        current_user.blogs.create!(row.to_h)
+    batch_size = 1000
+
+    csv = CSV.open(file.path, headers: true)
+    csv.lazy.each_slice(batch_size) do |csv_rows|
+      blogs_to_create = []
+
+      # Build array of Blog objects
+      csv_rows.each do |row|
+        blog_params = row.to_h
+        blog_params['user_id'] ||= current_user.id if blog_params['user_id'].nil? #if value is not in csv
+        blogs_to_create << Blog.new(blog_params)
       end
+
+      # Insert blogs in bulk
+      Blog.import blogs_to_create, recursive: true
     end
-    # End code to handle CSV data
+    flash[:success] = "Blogs imported successfully."
+  rescue => e
+    flash[:error] = "An error occurred during the import: #{e.message}"
+  ensure
     redirect_to blogs_path
   end
 
   private
-    # Use callbacks to share common setup or constraints between actions.
-    def set_blog
-      @blog = current_user.blogs.find(params[:id])
-    end
 
-    # Only allow a list of trusted parameters through.
-    def blog_params
-      params.require(:blog).permit(:title, :body, :user_id)
-    end
+  # Use callbacks to share common setup or constraints between actions.
+  def set_blog
+    @blog = current_user.blogs.find(params[:id])
+  end
+
+  # Only allow a list of trusted parameters through.
+  def blog_params
+    params.require(:blog).permit(:title, :body, :user_id)
+  end
 end

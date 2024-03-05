@@ -13,23 +13,25 @@
       </tr>
     </thead>
     <tbody>
-      <% @employees.dig("data").each do |e| %>
-      <tr>
-        <th scope="row"><%= e.dig("id") %></th>
-        <td><%= e.dig("name") %></td>
-        <td><%= e.dig("salary") %></td>
-        <td><%= e.dig("position") %></td>
-        <td><%= e.dig("date_of_birth") %></td>
-        <td><%= link_to 'Edit', edit_employee_path(e["id"]) %> </td>
-        <td><%= link_to 'Show', employee_path(e["id"]) %> </td>
-  
-      </tr>
+      <% @employees.dig("data").each do |employee| %>
+        <tr>
+          <th scope="row"><%= employee.dig("id") %></th>
+          <td><%= employee.dig("name") %></td>
+          <td><%= employee.dig("salary") %></td>
+          <td><%= employee.dig("position") %></td>
+          <td><%= employee.dig("date_of_birth") %></td>
+          <td><%= link_to 'Edit', edit_employee_path(employee.dig("id")) %></td>
+          <td><%= link_to 'Show', employee_path(employee.dig("id")) %></td>
+        </tr>
       <% end %>
     </tbody>
   </table>
 
-  <%= link_to 'First Page', employees_path(page: 1) %> |
-  <%= link_to 'Next Page', employees_path(page: @employees.dig("meta","next_page")) %> |
-  <%= link_to 'Previous Page', employees_path(page: @employees.dig("meta","prev_page")) %> |
-  <%= link_to 'Last Page', employees_path(page: @employees.dig("meta","total_pages")) %>
+  <% meta = @employees.dig("meta") %>
+  <% if meta.present? %>
+    <%= link_to 'First Page', employees_path(page: 1) %> |
+    <%= link_to 'Next Page', employees_path(page: meta["next_page"]) if meta["next_page"].present? %> |
+    <%= link_to 'Previous Page', employees_path(page: meta["prev_page"]) if meta["prev_page"].present? %> |
+    <%= link_to 'Last Page', employees_path(page: meta["total_pages"]) if meta["total_pages"].present? %>
+  <% end %>
 </div>

@@ -1,18 +1,9 @@
 <table class="table">
-  <tr>
-    <th>Name</th>
-    <td><%= @employee.dig("name") %></td>
-  </tr>
-  <tr>
-    <th>Position</th>
-    <td><%= @employee.dig("position") %></td>
-  </tr>
-  <tr>
-    <th>Salary</th>  
-    <td><%= @employee.dig("salary") %></td>
-  </tr>
-  <tr>
-    <th>Date of Birth</th>  
-    <td><%= @employee.dig("date_of_birth") %></td>
-  </tr>
+  <% attributes = { "Name" => "name", "Position" => "position", "Salary" => "salary", "Date of Birth" => "date_of_birth" } %>
+  <% attributes.each do |label, attribute| %>
+    <tr>
+      <th><%= label %></th>
+      <td><%= @employee.dig(attribute) %></td>
+    </tr>
+  <% end %>
 </table>
